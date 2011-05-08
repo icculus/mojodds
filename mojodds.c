@@ -174,7 +174,8 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
 
 // !!! FIXME: improve the crap out of this API later.
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
-                       const void **_tex, unsigned long *_texlen, int *_dxtver)
+                       const void **_tex, unsigned long *_texlen, int *_dxtver,
+                       unsigned int *_w, unsigned int *_h)
 {
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
@@ -183,7 +184,9 @@ int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
         return 0;
 
     *_tex = (const void *) ptr;
-    *_texlen = (long) header.dwPitchOrLinearSize;
+    *_texlen = (unsigned long) header.dwPitchOrLinearSize;
+    *_w = (unsigned int) header.dwWidth;
+    *_h = (unsigned int) header.dwHeight;
 
     switch (header.ddspf.dwFourCC)
     {
