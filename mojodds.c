@@ -173,6 +173,13 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
 
 
 // !!! FIXME: improve the crap out of this API later.
+int MOJODDS_isDDS(const void *_ptr, const unsigned long _len)
+{
+    size_t len = (size_t) _len;
+    const uint8 *ptr = (const uint8 *) _ptr;
+    return (readui32(&ptr, &len) == DDS_MAGIC);
+}
+
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        const void **_tex, unsigned long *_texlen, int *_dxtver,
                        unsigned int *_w, unsigned int *_h)
