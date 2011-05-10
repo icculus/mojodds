@@ -174,15 +174,18 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         {
             case FOURCC_DXT1:
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-                calcSize = ((width ? ((width + 3) / 4) : 1) * 8) * height;
+                calcSize = ((width ? ((width + 3) / 4) : 1) * 8) *
+                           (height ? ((height + 3) / 4) : 1);
                 break;
             case FOURCC_DXT3:
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-                calcSize = ((width ? ((width + 3) / 4) : 1) * 16) * height;
+                calcSize = ((width ? ((width + 3) / 4) : 1) * 16) *
+                           (height ? ((height + 3) / 4) : 1);
                 break;
             case FOURCC_DXT5:
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-                calcSize = ((width ? ((width + 3) / 4) : 1) * 16) * height;
+                calcSize = ((width ? ((width + 3) / 4) : 1) * 16) *
+                           (height ? ((height + 3) / 4) : 1);
                 break;
 
             // !!! FIXME: DX10 is an extended header, introduced by DirectX 10.
