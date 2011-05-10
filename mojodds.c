@@ -54,6 +54,12 @@ typedef uint32_t uint32;
 #define FOURCC_DXT5 0x35545844
 #define FOURCC_DX10 0x30315844
 
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
+#define GL_BGR 0x80E0
+#define GL_BGRA 0x80E1
+
 typedef struct
 {
     uint32 dwSize;
@@ -101,7 +107,8 @@ static uint32 readui32(const uint8 **_ptr, size_t *_len)
     return retval;
 } // readui32
 
-static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
+static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
+                     unsigned int *_glfmt)
 {
     const uint32 pitchAndLinear = (DDSD_PITCH | DDSD_LINEARSIZE);
     uint32 width = 0;
@@ -159,28 +166,66 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
     else if ((header->dwFlags & pitchAndLinear) == pitchAndLinear)
         return 0;  // can't specify both.
 
-    if ((header->ddspf.dwFlags & DDPF_FOURCC) == 0)  // !!! FIXME
-        return 0;
-
     if (header->ddspf.dwFlags & DDPF_FOURCC)
     {
         switch (header->ddspf.dwFourCC)
         {
             case FOURCC_DXT1:
+                *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
                 calcSize = ((width ? ((width + 3) / 4) : 1) * 8) * height;
                 break;
-            case FOURCC_DXT2:
             case FOURCC_DXT3:
-            case FOURCC_DXT4:
-            case FOURCC_DXT5:
+                *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
                 calcSize = ((width ? ((width + 3) / 4) : 1) * 16) * height;
                 break;
+            case FOURCC_DXT5:
+                *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                calcSize = ((width ? ((width + 3) / 4) : 1) * 16) * height;
+                break;
+
             // !!! FIXME: DX10 is an extended header, introduced by DirectX 10.
-            //case FOURCC_DX10:
+            //case FOURCC_DX10: do_something(); break;
+
+            //case FOURCC_DXT2:  // premultiplied alpha unsupported.
+            //case FOURCC_DXT4:  // premultiplied alpha unsupported.
             default:
                 return 0;  // unsupported data format.
         } // switch
     } // if
+
+    // no FourCC...uncompressed data.
+    else if (header->ddspf.dwFlags & DDPF_RGB)
+    {
+        if ( (header->ddspf.dwRBitMask != 0x00FF0000) ||
+             (header->ddspf.dwGBitMask != 0x0000FF00) ||
+             (header->ddspf.dwBBitMask != 0x000000FF) )
+            return 0;  // !!! FIXME: deal with this.
+
+        if (header->ddspf.dwFlags & DDPF_ALPHAPIXELS)
+        {
+            if ( (header->ddspf.dwRGBBitCount != 32) ||
+                 (header->ddspf.dwABitMask != 0xFF000000) )
+                return 0;  // unsupported.
+            *_glfmt = GL_BGRA;
+        } // if
+        else
+        {
+            if (header->ddspf.dwRGBBitCount != 24)
+                return 0;  // unsupported.
+            *_glfmt = GL_BGR;
+        } // else
+
+        calcSizeFlag = DDSD_PITCH;
+        calcSize = ((width * header->ddspf.dwRGBBitCount) + 7) / 8;
+    } // else if
+
+    //else if (header->ddspf.dwFlags & DDPF_LUMINANCE)  // !!! FIXME
+    //else if (header->ddspf.dwFlags & DDPF_YUV)  // !!! FIXME
+    //else if (header->ddspf.dwFlags & DDPF_ALPHA)  // !!! FIXME
+    else
+    {
+        return 0;  // unsupported data format.
+    } // else if
 
     // no pitch or linear size? Calculate it.
     if ((header->dwFlags & pitchAndLinear) == 0)
@@ -208,29 +253,23 @@ int MOJODDS_isDDS(const void *_ptr, const unsigned long _len)
 } // MOJODDS_isDDS
 
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
-                       const void **_tex, unsigned long *_texlen, int *_dxtver,
-                       unsigned int *_w, unsigned int *_h)
+                       const void **_tex, unsigned long *_texlen,
+                       unsigned int *_glfmt, unsigned int *_w,
+                       unsigned int *_h)
 {
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     MOJODDS_Header header;
-    if (!parse_dds(&header, &ptr, &len))
+    if (!parse_dds(&header, &ptr, &len, _glfmt))
         return 0;
 
     *_tex = (const void *) ptr;
-    *_texlen = (unsigned long) header.dwPitchOrLinearSize;
     *_w = (unsigned int) header.dwWidth;
     *_h = (unsigned int) header.dwHeight;
+    *_texlen = (unsigned long) header.dwPitchOrLinearSize;
 
-    switch (header.ddspf.dwFourCC)
-    {
-        case FOURCC_DXT1: *_dxtver = 1; break;
-        case FOURCC_DXT2: *_dxtver = 2; break;
-        case FOURCC_DXT3: *_dxtver = 3; break;
-        case FOURCC_DXT4: *_dxtver = 4; break;
-        case FOURCC_DXT5: *_dxtver = 5; break;
-        default: *_dxtver = 0; return 0;
-    } // switch
+    if (header.dwFlags & DDSD_PITCH)
+        *_texlen *= header.dwHeight;
 
     return 1;
 } // MOJODDS_getTexture
