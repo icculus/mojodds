@@ -24,7 +24,6 @@ typedef uint32_t uint32;
 
 #define STATICARRAYLEN(x) ( (sizeof ((x))) / (sizeof ((x)[0])) )
 
-
 #define DDS_MAGIC 0x20534444  // 'DDS ' in littleendian.
 #define DDS_HEADERSIZE 124
 #define DDS_PIXFMTSIZE 32
@@ -37,6 +36,7 @@ typedef uint32_t uint32;
 #define DDSD_LINEARSIZE 0x80000
 #define DDSD_DEPTH 0x800000
 #define DDSD_REQ (DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_FMT)
+#define DDSCAPS_ALPHA 0x2
 #define DDSCAPS_COMPLEX 0x8
 #define DDSCAPS_MIPMAP 0x400000
 #define DDSCAPS_TEXTURE 0x1000
@@ -143,6 +143,8 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
 
     width = header->dwWidth;
     height = header->dwHeight;
+
+    header->dwCaps &= ~DDSCAPS_ALPHA;  // we'll get this from the pixel format.
 
     if (header->dwSize != DDS_HEADERSIZE)   // header size must be 124.
         return 0;
