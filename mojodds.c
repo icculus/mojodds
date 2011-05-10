@@ -108,7 +108,7 @@ static uint32 readui32(const uint8 **_ptr, size_t *_len)
 } // readui32
 
 static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
-                     unsigned int *_glfmt)
+                     unsigned int *_glfmt, unsigned int *_miplevels)
 {
     const uint32 pitchAndLinear = (DDSD_PITCH | DDSD_LINEARSIZE);
     uint32 width = 0;
@@ -159,12 +159,14 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         return 0;
     else if ((header->dwFlags & DDSD_REQ) != DDSD_REQ)  // must have these bits.
         return 0;
-    else if (header->dwCaps != DDSCAPS_TEXTURE)  // !!! FIXME
+    else if ((header->dwCaps & DDSCAPS_TEXTURE) == 0)
         return 0;
     else if (header->dwCaps2 != 0)  // !!! FIXME (non-zero with other bits in dwCaps set)
         return 0;
     else if ((header->dwFlags & pitchAndLinear) == pitchAndLinear)
         return 0;  // can't specify both.
+
+    *_miplevels = (header->dwCaps & DDSCAPS_MIPMAP) ? header->dwMipMapCount : 1;
 
     if (header->ddspf.dwFlags & DDPF_FOURCC)
     {
@@ -255,12 +257,12 @@ int MOJODDS_isDDS(const void *_ptr, const unsigned long _len)
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        const void **_tex, unsigned long *_texlen,
                        unsigned int *_glfmt, unsigned int *_w,
-                       unsigned int *_h)
+                       unsigned int *_h, unsigned int *_miplevels)
 {
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     MOJODDS_Header header;
-    if (!parse_dds(&header, &ptr, &len, _glfmt))
+    if (!parse_dds(&header, &ptr, &len, _glfmt, _miplevels))
         return 0;
 
     *_tex = (const void *) ptr;
