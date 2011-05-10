@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #ifdef _MSC_VER
 typedef unsigned __int8 uint8;
@@ -102,6 +103,11 @@ static uint32 readui32(const uint8 **_ptr, size_t *_len)
 
 static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
 {
+    const uint32 pitchAndLinear = (DDSD_PITCH | DDSD_LINEARSIZE);
+    uint32 width = 0;
+    uint32 height = 0;
+    uint32 calcSize = 0;
+    uint32 calcSizeFlag = DDSD_LINEARSIZE;
     int i;
 
     // Files start with magic value...
@@ -135,6 +141,9 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
     header->dwCaps4 = readui32(ptr, len);
     header->dwReserved2 = readui32(ptr, len);
 
+    width = header->dwWidth;
+    height = header->dwHeight;
+
     if (header->dwSize != DDS_HEADERSIZE)   // header size must be 124.
         return 0;
     else if (header->ddspf.dwSize != DDS_PIXFMTSIZE)   // size must be 32.
@@ -145,10 +154,10 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
         return 0;
     else if (header->dwCaps2 != 0)  // !!! FIXME (non-zero with other bits in dwCaps set)
         return 0;
+    else if ((header->dwFlags & pitchAndLinear) == pitchAndLinear)
+        return 0;  // can't specify both.
 
     if ((header->ddspf.dwFlags & DDPF_FOURCC) == 0)  // !!! FIXME
-        return 0;
-    if ((header->dwFlags & DDSD_LINEARSIZE) == 0)  // !!! FIXME
         return 0;
 
     if (header->ddspf.dwFlags & DDPF_FOURCC)
@@ -156,16 +165,32 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len)
         switch (header->ddspf.dwFourCC)
         {
             case FOURCC_DXT1:
+                calcSize = ((width ? ((width + 3) / 4) : 1) * 8) * height;
+                break;
             case FOURCC_DXT2:
             case FOURCC_DXT3:
             case FOURCC_DXT4:
             case FOURCC_DXT5:
+                calcSize = ((width ? ((width + 3) / 4) : 1) * 16) * height;
+                break;
             // !!! FIXME: DX10 is an extended header, introduced by DirectX 10.
             //case FOURCC_DX10:
-                break;
             default:
                 return 0;  // unsupported data format.
         } // switch
+    } // if
+
+    // no pitch or linear size? Calculate it.
+    if ((header->dwFlags & pitchAndLinear) == 0)
+    {
+        if (!calcSizeFlag)
+        {
+            assert(0 && "should have caught this up above");
+            return 0;  // uh oh.
+        } // if
+
+        header->dwPitchOrLinearSize = calcSize;
+        header->dwFlags |= calcSizeFlag;
     } // if
 
     return 1;
@@ -178,7 +203,7 @@ int MOJODDS_isDDS(const void *_ptr, const unsigned long _len)
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     return (readui32(&ptr, &len) == DDS_MAGIC);
-}
+} // MOJODDS_isDDS
 
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        const void **_tex, unsigned long *_texlen, int *_dxtver,
