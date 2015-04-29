@@ -59,6 +59,7 @@ typedef uint32_t uint32;
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
 #define GL_BGR 0x80E0
 #define GL_BGRA 0x80E1
+#define GL_LUMINANCE_ALPHA 0x190A
 
 typedef struct
 {
@@ -222,7 +223,14 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
 
         calcSizeFlag = DDSD_PITCH;
         calcSize = ((width * header->ddspf.dwRGBBitCount) + 7) / 8;
-    } // else if
+    }
+    else if (header->ddspf.dwFlags & (DDPF_LUMINANCE | DDPF_ALPHA) )
+    {
+        *_glfmt = GL_LUMINANCE_ALPHA;
+
+        calcSizeFlag = DDSD_PITCH;
+        calcSize = ((width * header->ddspf.dwRGBBitCount) + 7) / 8;
+    }
 
     //else if (header->ddspf.dwFlags & DDPF_LUMINANCE)  // !!! FIXME
     //else if (header->ddspf.dwFlags & DDPF_YUV)  // !!! FIXME
@@ -278,6 +286,55 @@ int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
 
     return 1;
 } // MOJODDS_getTexture
+
+int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
+                             const void*_basetex, const unsigned long _basetexlen,
+                             unsigned int w, unsigned h,
+                             const void **_tex, unsigned long *_texlen,
+                             unsigned int *_texw, unsigned int *_texh)
+{
+    int i;
+    const void* newtex;
+    unsigned long newtexlen;
+    unsigned int neww;
+    unsigned int newh;
+
+    newtex = _basetex;
+    newtexlen = _basetexlen;
+    neww = w;
+    newh = h;
+
+    // Calculate size of miplevel
+    for (i=0; i < miplevel; ++i)
+    {
+        // move position to next texture start
+        newtex += newtexlen;
+        // calculate texture size
+        newtexlen >>= 2;
+        neww >>= 1;
+        newh >>= 1;
+        if (neww < 1) neww = 1;
+        if (newh < 1) newh = 1;
+        switch (glfmt) {
+            case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+                if (newtexlen < 8) newtexlen = 8;
+                break;
+            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+                if (newtexlen < 16) newtexlen = 16;
+                break;
+        } // switch
+    } // for
+
+    *_tex = newtex;
+    if (_texlen) {
+        *_texlen = newtexlen;
+    }
+    *_texw = neww;
+    *_texh = newh;
+    return 1;
+} // MOJODDS_getMipMapTexture
+
 
 // end of mojodds.c ...
 
