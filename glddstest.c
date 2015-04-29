@@ -16,6 +16,26 @@
 // use apitrace, vogl or similar tool to see what it does
 
 
+static void pumpGLErrors() {
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		switch (err) {
+		case GL_INVALID_ENUM:
+			printf("GL error GL_INVALID_ENUM\n");
+			break;
+
+		case GL_INVALID_VALUE:
+			printf("GL error GL_INVALID_VALUE\n");
+			break;
+
+		default:
+            printf("Unknown GL error %04x\n", err);
+			break;
+		}
+	}
+}
+
+
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		printf("Usage: %s DDS-file\n", argv[0]);
@@ -113,6 +133,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				glTexImage2D(GL_TEXTURE_2D, miplevel, internalFormat, mipW, mipH, 0, glfmt, GL_UNSIGNED_BYTE, miptex);
 			}
+			pumpGLErrors();
 		}
 
 		// and now the same with ARB_texture_storage if it's available
@@ -120,6 +141,7 @@ int main(int argc, char *argv[]) {
 			glGenTextures(1, &texId);
 			glBindTexture(GL_TEXTURE_2D, texId);
 			glTexStorage2D(GL_TEXTURE_2D, miplevels, internalFormat, w, h);
+			pumpGLErrors();
 
 			for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
 				const void *miptex = NULL;
@@ -136,6 +158,7 @@ int main(int argc, char *argv[]) {
 				} else {
 					glTexSubImage2D(GL_TEXTURE_2D, miplevel, 0, 0, mipW, mipH, glfmt, GL_UNSIGNED_BYTE, miptex);
 				}
+				pumpGLErrors();
 			}
 		}
 
