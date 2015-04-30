@@ -59,6 +59,26 @@ static int ddsinfo(const char *filename) {
 		printf("glfmt: 0x%x\n", glfmt);
 		printf("width x height: %u x %u\n", w, h);
 		printf("miplevels: %d\n", miplevels);
+		printf("textureType: ");
+		switch (textureType) {
+		case MOJODDS_TEXTURE_NONE:
+			printf("none (bug?)\n");
+			return 4;
+			break;
+
+		case MOJODDS_TEXTURE_2D:
+			printf("2D\n");
+			break;
+
+		case MOJODDS_TEXTURE_CUBE:
+			printf("cube\n");
+			break;
+
+		case MOJODDS_TEXTURE_VOLUME:
+			printf("volume\n");
+			break;
+
+		}
 		printf("\n");
 
 		for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
