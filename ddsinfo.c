@@ -14,13 +14,7 @@ static bool isPow2(unsigned int v) {
 }
 
 
-int main(int argc, char *argv[]) {
-	if (argc != 2) {
-		printf("Usage: %s DDS-file\n", argv[0]);
-		return 0;
-	}
-
-	const char *filename = argv[1];
+static int ddsinfo(const char *filename) {
 	FILE *f = fopen(filename, "rb");
 	if (!f) {
 		printf("Error opening %s: %s (%d)\n", filename, strerror(errno), errno);
@@ -82,4 +76,15 @@ int main(int argc, char *argv[]) {
 	free(contents);
 
 	return 0;
+}
+
+
+int main(int argc, char *argv[]) {
+	if (argc != 2) {
+		printf("Usage: %s DDS-file\n", argv[0]);
+		return 0;
+	}
+
+	const char *filename = argv[1];
+	return ddsinfo(filename);
 }
