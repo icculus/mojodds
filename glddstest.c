@@ -49,42 +49,7 @@ static void pumpGLErrors(const char *format, ...) {
 }
 
 
-int main(int argc, char *argv[]) {
-	if (argc != 2) {
-		printf("Usage: %s DDS-file\n", argv[0]);
-		return 0;
-	}
-
-        SDL_Init(SDL_INIT_VIDEO);
-		SDL_Window *window = SDL_CreateWindow("OpenGL DDS test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
-		if (window == NULL) {
-			printf("Could not create window: %s\n", SDL_GetError());
-			return 3;
-		}
-
-		SDL_GLContext context = SDL_GL_CreateContext(window);
-		if (context == NULL) {
-			printf("Could not create GL context: %s\n", SDL_GetError());
-			SDL_DestroyWindow(window);
-			return 4;
-		}
-
-		// clear and swap to get better traces
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
-
-		glewInit();
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
-
-		// glewInit might raise errors if we got an OpenGL 3.0 context
-		// ignore them
-		// in this case glGetError is simpler than fooling around with callbacks
-		GLenum err = GL_NO_ERROR;
-		while ((err = glGetError()) != GL_NO_ERROR) { }
-
-	const char *filename = argv[1];
+static int glddstest(const char *filename) {
 	FILE *f = fopen(filename, "rb");
 	if (!f) {
 		printf("Error opening %s: %s (%d)\n", filename, strerror(errno), errno);
@@ -179,6 +144,48 @@ int main(int argc, char *argv[]) {
 
 	free(contents);
 
+	return 0;
+}
+
+
+int main(int argc, char *argv[]) {
+	if (argc != 2) {
+		printf("Usage: %s DDS-file\n", argv[0]);
+		return 0;
+	}
+
+        SDL_Init(SDL_INIT_VIDEO);
+		SDL_Window *window = SDL_CreateWindow("OpenGL DDS test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
+		if (window == NULL) {
+			printf("Could not create window: %s\n", SDL_GetError());
+			return 3;
+		}
+
+		SDL_GLContext context = SDL_GL_CreateContext(window);
+		if (context == NULL) {
+			printf("Could not create GL context: %s\n", SDL_GetError());
+			SDL_DestroyWindow(window);
+			return 4;
+		}
+
+		// clear and swap to get better traces
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		SDL_GL_SwapWindow(window);
+
+		glewInit();
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		SDL_GL_SwapWindow(window);
+
+		// glewInit might raise errors if we got an OpenGL 3.0 context
+		// ignore them
+		// in this case glGetError is simpler than fooling around with callbacks
+		GLenum err = GL_NO_ERROR;
+		while ((err = glGetError()) != GL_NO_ERROR) { }
+
+	const char *filename = argv[1];
+	int retval = glddstest(filename);
+
 		// one last clear and swap for clean trace end
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		SDL_GL_SwapWindow(window);
@@ -186,5 +193,5 @@ int main(int argc, char *argv[]) {
 		SDL_GL_DeleteContext(context);
 		SDL_DestroyWindow(window);
 
-	return 0;
+	return retval;
 }
