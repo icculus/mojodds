@@ -168,6 +168,12 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     width = header->dwWidth;
     height = header->dwHeight;
 
+    // check for overflow in width * height
+    if (height > 0xFFFFFFFFU / width)
+    {
+        return 0;
+    }
+
     header->dwCaps &= ~DDSCAPS_ALPHA;  // we'll get this from the pixel format.
 
     if (header->dwSize != DDS_HEADERSIZE)   // header size must be 124.
