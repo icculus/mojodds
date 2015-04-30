@@ -183,6 +183,13 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
 
     *_miplevels = (header->dwCaps & DDSCAPS_MIPMAP) ? header->dwMipMapCount : 1;
 
+    if (*_miplevels > 32)
+    {
+        // too many mip levels, width and height would be larger than 32-bit int
+        // file is corrupted
+        return 0;
+    }
+
     if (header->ddspf.dwFlags & DDPF_FOURCC)
     {
         switch (header->ddspf.dwFourCC)
