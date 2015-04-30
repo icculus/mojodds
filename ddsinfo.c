@@ -57,7 +57,7 @@ static int ddsinfo(const char *filename) {
 		printf("texoffset: %u\n", (unsigned int)(texoffset));
 		printf("texlen: %lu\n", texlen);
 		printf("glfmt: 0x%x\n", glfmt);
-		printf("width x height: %d x %d\n", w, h);
+		printf("width x height: %u x %u\n", w, h);
 		printf("miplevels: %d\n", miplevels);
 		printf("\n");
 
@@ -73,7 +73,7 @@ static int ddsinfo(const char *filename) {
 
 			uintptr_t miptexoffset = ((const char *)(miptex)) - ((const char *)(tex));
 			bool npot = !(isPow2(mipW) || isPow2(mipH));
-			printf("%4d x %4d  %s", mipW, mipH, npot ? "NPOT  " : "      ");
+			printf("%4u x %4u  %s", mipW, mipH, npot ? "NPOT  " : "      ");
 			printf("miptexoffset: %8u  ", (unsigned int)(miptexoffset));
 			printf("miptexlen: %8lu\n", miptexlen);
 		}
