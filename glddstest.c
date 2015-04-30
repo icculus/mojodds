@@ -55,9 +55,10 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-	FILE *f = fopen(argv[1], "rb");
+	const char *filename = argv[1];
+	FILE *f = fopen(filename, "rb");
 	if (!f) {
-		printf("Error opening %s: %s (%d)\n", argv[1], strerror(errno), errno);
+		printf("Error opening %s: %s (%d)\n", filename, strerror(errno), errno);
 		return 1;
 	}
 
