@@ -349,6 +349,12 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         return 0;
     }
 
+    if (calcSize > *len) {
+        // there's not enough data to contain the advertised images
+        // trying to read mips would fail
+        return 0;
+    }
+
     return 1;
 } // parse_dds
 
