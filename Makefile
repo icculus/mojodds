@@ -23,12 +23,12 @@ clean:
 
 
 ddsinfo: ddsinfo.o mojodds.o
-	$(CC) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^
 
 
 glddstest: glddstest.o mojodds.o
-	$(CC) -o $@ $^ $(LDLIBS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 
 afl-mojodds: afl-mojodds.o mojodds.o
-	$(CC) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^
