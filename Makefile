@@ -12,7 +12,7 @@ LDLIBS+=$(shell pkg-config glew --libs)
 
 .SUFFIXES: .o
 
-PROGRAMS:=ddsinfo glddstest
+PROGRAMS:=ddsinfo glddstest afl-mojodds
 
 .PHONY: all clean
 
@@ -28,3 +28,7 @@ ddsinfo: ddsinfo.o mojodds.o
 
 glddstest: glddstest.o mojodds.o
 	$(CC) -o $@ $^ $(LDLIBS)
+
+
+afl-mojodds: afl-mojodds.o mojodds.o
+	$(CC) -o $@ $^

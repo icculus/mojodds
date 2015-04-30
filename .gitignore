@@ -3,3 +3,4 @@
 *.trace
 ddsinfo
 glddstest
+afl-mojodds
