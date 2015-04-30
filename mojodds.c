@@ -269,6 +269,7 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         *_glfmt = GL_LUMINANCE_ALPHA;
 
         calcSizeFlag = DDSD_PITCH;
+        blockSize = 2;
         calcSize = ((width * header->ddspf.dwRGBBitCount) + 7) / 8;
     }
 
