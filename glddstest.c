@@ -50,6 +50,8 @@ static void pumpGLErrors(const char *format, ...) {
 
 
 static int glddstest(const char *filename) {
+    printf("%s\n", filename);
+
 	FILE *f = fopen(filename, "rb");
 	if (!f) {
 		printf("Error opening %s: %s (%d)\n", filename, strerror(errno), errno);
@@ -149,8 +151,8 @@ static int glddstest(const char *filename) {
 
 
 int main(int argc, char *argv[]) {
-	if (argc != 2) {
-		printf("Usage: %s DDS-file\n", argv[0]);
+	if (argc < 2) {
+		printf("Usage: %s DDS-file ...\n", argv[0]);
 		return 0;
 	}
 
@@ -183,15 +185,17 @@ int main(int argc, char *argv[]) {
 		GLenum err = GL_NO_ERROR;
 		while ((err = glGetError()) != GL_NO_ERROR) { }
 
-	const char *filename = argv[1];
-	int retval = glddstest(filename);
+	for (int i = 1; i < argc; i++) {
+		glddstest(argv[i]);
+		// clear and swap to make trace easier to parse
 
-		// one last clear and swap for clean trace end
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		SDL_GL_SwapWindow(window);
+
+	}
 
 		SDL_GL_DeleteContext(context);
 		SDL_DestroyWindow(window);
 
-	return retval;
+	return 0;
 }
