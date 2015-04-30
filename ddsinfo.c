@@ -47,9 +47,13 @@ static int ddsinfo(const char *filename) {
 		unsigned int cubemapfacelen = 0;
 		MOJODDS_textureType textureType = MOJODDS_TEXTURE_NONE;
 		int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels, &cubemapfacelen, &textureType);
+		if (!retval) {
+			printf("MOJODDS_getTexture failed\n");
+			free(contents);
+			return 3;
+		}
 
 		uintptr_t texoffset = ((const char *)(tex)) - contents;
-		printf("MOJODDS_getTexture retval: %d\n", retval);
 		printf("texoffset: %u\n", (unsigned int)(texoffset));
 		printf("texlen: %lu\n", texlen);
 		printf("glfmt: 0x%x\n", glfmt);

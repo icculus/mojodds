@@ -79,7 +79,14 @@ static int glddstest(const char *filename) {
 		const void *tex = NULL;
 		unsigned long texlen = 0;
 		unsigned int glfmt = 0, w = 0, h = 0, miplevels = 0;
-		int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels);
+		unsigned int cubemapfacelen = 0;
+		MOJODDS_textureType textureType = MOJODDS_TEXTURE_NONE;
+		int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels, &cubemapfacelen, &textureType);
+		if (!retval) {
+			printf("MOJODDS_getTexture failed\n");
+			free(contents);
+			return 3;
+		}
 
 		bool isCompressed = true;
 		GLenum internalFormat = glfmt;
