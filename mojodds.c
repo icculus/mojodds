@@ -298,6 +298,12 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
     unsigned long newtexlen;
     unsigned int neww;
     unsigned int newh;
+    unsigned int blocksize = 16;
+
+    if (glfmt == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT)
+    {
+        blocksize = 8;
+    }
 
     newtex = _basetex;
     newtexlen = _basetexlen;
@@ -310,20 +316,11 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
         // move position to next texture start
         newtex += newtexlen;
         // calculate texture size
-        newtexlen >>= 2;
         neww >>= 1;
         newh >>= 1;
         if (neww < 1) neww = 1;
         if (newh < 1) newh = 1;
-        switch (glfmt) {
-            case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                if (newtexlen < 8) newtexlen = 8;
-                break;
-            case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-            case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                if (newtexlen < 16) newtexlen = 16;
-                break;
-        } // switch
+        newtexlen = ((neww + 3) / 4) * ((newh + 3) / 4) * blocksize;
     } // for
 
     *_tex = newtex;
