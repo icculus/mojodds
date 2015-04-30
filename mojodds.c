@@ -314,6 +314,24 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
             ht >>= 1;
         }
     }
+    else if (*_textureType == MOJODDS_TEXTURE_2D)
+    {
+        // check that file contains enough data like the header says
+        // TODO: also do this for other texture types
+        uint32 wd = header->dwWidth;
+        uint32 ht = header->dwHeight;
+        uint32 dataLen = 0;
+        for (i = 0; i < (int)*_miplevels; i++)
+        {
+            dataLen += MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+            wd >>= 1;
+            ht >>= 1;
+        }
+
+        if (*len < dataLen) {
+            return 0;
+        }
+    }
 
     return 1;
 } // parse_dds
