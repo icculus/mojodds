@@ -318,6 +318,11 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     {
         uint32 wd = header->dwWidth;
         uint32 ht = header->dwHeight;
+        if (wd != ht)
+        {
+            // cube maps must be square
+            return 0;
+        }
         *_cubemapfacelen = 0;
         for (i = 0; i < (int)*_miplevels; i++)
         {
