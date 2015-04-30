@@ -339,6 +339,11 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         }
     }
 
+    if (header->dwPitchOrLinearSize > *len) {
+        // dwPitchOrLinearSize is incorrect
+        return 0;
+    }
+
     return 1;
 } // parse_dds
 
