@@ -55,6 +55,35 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
+        SDL_Init(SDL_INIT_VIDEO);
+		SDL_Window *window = SDL_CreateWindow("OpenGL DDS test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
+		if (window == NULL) {
+			printf("Could not create window: %s\n", SDL_GetError());
+			return 3;
+		}
+
+		SDL_GLContext context = SDL_GL_CreateContext(window);
+		if (context == NULL) {
+			printf("Could not create GL context: %s\n", SDL_GetError());
+			SDL_DestroyWindow(window);
+			return 4;
+		}
+
+		// clear and swap to get better traces
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		SDL_GL_SwapWindow(window);
+
+		glewInit();
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		SDL_GL_SwapWindow(window);
+
+		// glewInit might raise errors if we got an OpenGL 3.0 context
+		// ignore them
+		// in this case glGetError is simpler than fooling around with callbacks
+		GLenum err = GL_NO_ERROR;
+		while ((err = glGetError()) != GL_NO_ERROR) { }
+
 	const char *filename = argv[1];
 	FILE *f = fopen(filename, "rb");
 	if (!f) {
@@ -80,37 +109,6 @@ int main(int argc, char *argv[]) {
 	int isDDS = MOJODDS_isDDS(contents, size);
 	printf("isDDS: %d\n", isDDS);
 	if (isDDS) {
-        SDL_Init(SDL_INIT_VIDEO);
-		SDL_Window *window = SDL_CreateWindow("OpenGL DDS test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
-		if (window == NULL) {
-			printf("Could not create window: %s\n", SDL_GetError());
-			free(contents);
-			return 3;
-		}
-
-		SDL_GLContext context = SDL_GL_CreateContext(window);
-		if (context == NULL) {
-			printf("Could not create GL context: %s\n", SDL_GetError());
-			SDL_DestroyWindow(window);
-			free(contents);
-			return 4;
-		}
-
-		// clear and swap to get better traces
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
-
-		glewInit();
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
-
-		// glewInit might raise errors if we got an OpenGL 3.0 context
-		// ignore them
-		// in this case glGetError is simpler than fooling around with callbacks
-		GLenum err = GL_NO_ERROR;
-		while ((err = glGetError()) != GL_NO_ERROR) { }
-
 		const void *tex = NULL;
 		unsigned long texlen = 0;
 		unsigned int glfmt = 0, w = 0, h = 0, miplevels = 0;
@@ -177,6 +175,9 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
+	}
+
+	free(contents);
 
 		// one last clear and swap for clean trace end
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -184,9 +185,6 @@ int main(int argc, char *argv[]) {
 
 		SDL_GL_DeleteContext(context);
 		SDL_DestroyWindow(window);
-	}
-
-	free(contents);
 
 	return 0;
 }
