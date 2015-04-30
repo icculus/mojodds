@@ -168,6 +168,11 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     width = header->dwWidth;
     height = header->dwHeight;
 
+    if (width == 0 || height == 0)
+    {
+        return 0;
+    }
+
     // check for overflow in width * height
     if (height > 0xFFFFFFFFU / width)
     {
