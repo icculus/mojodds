@@ -96,7 +96,7 @@ static int ddsinfo(const char *filename) {
 				const void *miptex = NULL;
 				unsigned long miptexlen = 0;
 				unsigned int mipW = 0, mipH = 0;
-				retval = MOJODDS_getCubeFace(MOJODDS_CUBEFACE_POSITIVE_X, miplevel, glfmt, tex, w, h, &miptex, &miptexlen, &mipW, &mipH);
+				retval = MOJODDS_getCubeFace(MOJODDS_CUBEFACE_POSITIVE_X, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
 				if (!retval) {
 					printf("MOJODDS_getMipMapTexture(%u) error: %d\n", miplevel, retval);
 					continue;
