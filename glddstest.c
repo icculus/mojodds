@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -102,6 +103,13 @@ static int glddstest(const char *filename) {
 		GLuint texId = 0;
 		// we leak this but don't care
 		glGenTextures(1, &texId);
+
+		switch (textureType) {
+		case MOJODDS_TEXTURE_NONE:
+			assert(false);  // this is not supposed to happen
+			break;
+
+		case MOJODDS_TEXTURE_2D:
 		glBindTexture(GL_TEXTURE_2D, texId);
 
 		for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
@@ -148,6 +156,69 @@ static int glddstest(const char *filename) {
 					pumpGLErrors("glTexSubImage2D %u %ux%u 0x%04x", miplevel, mipW, mipH, glfmt);
 				}
 			}
+		}
+		glBindTexture(GL_TEXTURE_2D, 0);
+		break;
+
+		case MOJODDS_TEXTURE_CUBE:
+			glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
+
+			for (MOJODDS_cubeFace cubeFace = MOJODDS_CUBEFACE_POSITIVE_X; cubeFace <= MOJODDS_CUBEFACE_NEGATIVE_Z; cubeFace++) {
+				for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
+					const void *miptex = NULL;
+					unsigned long miptexlen = 0;
+					unsigned int mipW = 0, mipH = 0;
+					retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+					if (!retval) {
+						printf("MOJODDS_getCubeFace(%u, %u) error: %d\n", cubeFace, miplevel, retval);
+						continue;
+					}
+
+					if (isCompressed) {
+						glCompressedTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubeFace, miplevel, glfmt, mipW, mipH, 0, miptexlen, miptex);
+						pumpGLErrors("glCompressedTexImage2D %u 0x%04x %ux%u %u", miplevel, glfmt, mipW, mipH, miptexlen);
+					} else {
+						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubeFace, miplevel, internalFormat, mipW, mipH, 0, glfmt, GL_UNSIGNED_BYTE, miptex);
+						pumpGLErrors("glTexImage2D %u 0x%04x %ux%u 0x%04x", miplevel, internalFormat, mipW, mipH, glfmt);
+					}
+				}
+			}
+
+			// and now the same with ARB_texture_storage if it's available
+			if (GLEW_ARB_texture_storage) {
+				glGenTextures(1, &texId);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
+				glTexStorage2D(GL_TEXTURE_CUBE_MAP, miplevels, internalFormat, w, h);
+				pumpGLErrors("glTexStorage2D %u 0x%04x %ux%u", miplevels, internalFormat, w, h);
+
+				for (MOJODDS_cubeFace cubeFace = MOJODDS_CUBEFACE_POSITIVE_X; cubeFace <= MOJODDS_CUBEFACE_NEGATIVE_Z; cubeFace++) {
+					for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
+						const void *miptex = NULL;
+						unsigned long miptexlen = 0;
+						unsigned int mipW = 0, mipH = 0;
+						retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+						if (!retval) {
+							printf("MOJODDS_getCubeFace(%u, %u) error: %d\n", cubeFace, miplevel, retval);
+							continue;
+						}
+
+						if (isCompressed) {
+							glCompressedTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubeFace, miplevel, 0, 0, mipW, mipH, glfmt, miptexlen, miptex);
+							pumpGLErrors("glCompressedTexSubImage2D %u %ux%u 0x%04x %u", miplevel, mipW, mipH, glfmt, miptexlen);
+						} else {
+							glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + cubeFace, miplevel, 0, 0, mipW, mipH, glfmt, GL_UNSIGNED_BYTE, miptex);
+							pumpGLErrors("glTexSubImage2D %u %ux%u 0x%04x", miplevel, mipW, mipH, glfmt);
+						}
+					}
+				}
+			}
+			glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+			break;
+
+		case MOJODDS_TEXTURE_VOLUME:
+			// TODO: do something with the data
+			break;
+
 		}
 	}
 

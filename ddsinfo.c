@@ -68,17 +68,6 @@ static int ddsinfo(const char *filename) {
 
 		case MOJODDS_TEXTURE_2D:
 			printf("2D\n");
-			break;
-
-		case MOJODDS_TEXTURE_CUBE:
-			printf("cube\n");
-			break;
-
-		case MOJODDS_TEXTURE_VOLUME:
-			printf("volume\n");
-			break;
-
-		}
 		printf("\n");
 
 		for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
@@ -96,6 +85,35 @@ static int ddsinfo(const char *filename) {
 			printf("%4u x %4u  %s", mipW, mipH, npot ? "NPOT  " : "      ");
 			printf("miptexoffset: %8u  ", (unsigned int)(miptexoffset));
 			printf("miptexlen: %8lu\n", miptexlen);
+		}
+			break;
+
+		case MOJODDS_TEXTURE_CUBE:
+			printf("cube\n");
+			printf("\n");
+
+			for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
+				const void *miptex = NULL;
+				unsigned long miptexlen = 0;
+				unsigned int mipW = 0, mipH = 0;
+				retval = MOJODDS_getCubeFace(MOJODDS_CUBEFACE_POSITIVE_X, miplevel, glfmt, tex, w, h, &miptex, &miptexlen, &mipW, &mipH);
+				if (!retval) {
+					printf("MOJODDS_getMipMapTexture(%u) error: %d\n", miplevel, retval);
+					continue;
+				}
+
+				uintptr_t miptexoffset = ((const char *)(miptex)) - ((const char *)(tex));
+				bool npot = !(isPow2(mipW) || isPow2(mipH));
+				printf("%4u x %4u  %s", mipW, mipH, npot ? "NPOT  " : "      ");
+				printf("miptexoffset: %8u  ", (unsigned int)(miptexoffset));
+				printf("miptexlen: %8lu\n", miptexlen);
+			}
+			break;
+
+		case MOJODDS_TEXTURE_VOLUME:
+			printf("volume\n");
+			break;
+
 		}
 	}
 

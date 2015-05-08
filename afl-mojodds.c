@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -55,6 +56,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	uint32_t hash = 0x12345678;
+	switch (textureType) {
+	case MOJODDS_TEXTURE_NONE:
+		assert(false);  // this is not supposed to happen
+		break;
+
+	case MOJODDS_TEXTURE_2D:
 	for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
 		const void *miptex = NULL;
 		unsigned long miptexlen = 0;
@@ -69,6 +76,33 @@ int main(int argc, char *argv[]) {
 		for (unsigned int i = 0; i < miptexlen; i++) {
 			hash = (hash * 65537) ^ miptex_[i];
 		}
+	}
+	break;
+
+	case MOJODDS_TEXTURE_CUBE:
+		for (MOJODDS_cubeFace cubeFace = MOJODDS_CUBEFACE_POSITIVE_X; cubeFace <= MOJODDS_CUBEFACE_NEGATIVE_Z; cubeFace++) {
+			for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
+				const void *miptex = NULL;
+				unsigned long miptexlen = 0;
+				unsigned int mipW = 0, mipH = 0;
+				retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+				if (!retval) {
+					continue;
+				}
+
+				// read every byte to make sure any buffer overflows actually overflow
+				const char *miptex_ = (const char *) miptex;
+				for (unsigned int i = 0; i < miptexlen; i++) {
+					hash = (hash * 65537) ^ miptex_[i];
+				}
+			}
+		}
+		break;
+
+	case MOJODDS_TEXTURE_VOLUME:
+		// TODO: do something with the data
+		break;
+
 	}
 	// do something the optimizer is not allowed to remove
 	printf("0x%08x\n", hash);
