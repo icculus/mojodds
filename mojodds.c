@@ -337,10 +337,15 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         // TODO: also do this for other texture types
         uint32 wd = header->dwWidth;
         uint32 ht = header->dwHeight;
-        uint32 dataLen = 0;
+        uint32_t dataLen = 0;
         for (i = 0; i < (int)*_miplevels; i++)
         {
-            dataLen += MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+            uint32_t mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+            if (UINT32_MAX - mipLen < dataLen) {
+                // data size would overflow 32-bit uint, invalid file
+                return 0;
+            }
+            dataLen += mipLen;
             wd >>= 1;
             ht >>= 1;
         }
