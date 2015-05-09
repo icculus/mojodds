@@ -94,7 +94,7 @@ static int glddstest(const char *filename) {
 
 		bool isCompressed = true;
 		GLenum internalFormat = glfmt;
-		if (glfmt == GL_BGRA || glfmt == GL_BGR) {
+		if (glfmt == GL_BGRA || glfmt == GL_BGR || glfmt == GL_LUMINANCE_ALPHA) {
 			isCompressed = false;
 			if (glfmt == GL_BGR) {
 				internalFormat = GL_RGB8;
