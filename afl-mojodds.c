@@ -13,10 +13,17 @@
 // if you don't know what this is you don't need it
 
 
+void __afl_manual_init(void);
+
+
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		return 0;
 	}
+
+#ifdef __AFL_HAVE_MANUAL_INIT
+	__afl_manual_init();
+#endif  // __AFL_HAVE_MANUAL_INIT
 
 	const char *filename = argv[1];
 
