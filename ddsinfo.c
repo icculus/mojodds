@@ -58,7 +58,7 @@ static int ddsinfo(const char *filename) {
 		printf("texlen: %lu\n", texlen);
 		printf("glfmt: 0x%x\n", glfmt);
 		printf("width x height: %u x %u\n", w, h);
-		printf("miplevels: %d\n", miplevels);
+		printf("miplevels: %u\n", miplevels);
 		printf("textureType: ");
 		switch (textureType) {
 		case MOJODDS_TEXTURE_NONE:

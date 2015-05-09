@@ -180,7 +180,7 @@ static int glddstest(const char *filename) {
 					unsigned int mipW = 0, mipH = 0;
 					retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, cubemapfacelen, w, h, &miptex, &miptexlen, &mipW, &mipH);
 					if (!retval) {
-						printf("MOJODDS_getCubeFace(%u, %u) error: %d\n", cubeFace, miplevel, retval);
+						printf("MOJODDS_getCubeFace(%d, %u) error: %d\n", cubeFace, miplevel, retval);
 						continue;
 					}
 
@@ -208,7 +208,7 @@ static int glddstest(const char *filename) {
 						unsigned int mipW = 0, mipH = 0;
 						retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, cubemapfacelen, w, h, &miptex, &miptexlen, &mipW, &mipH);
 						if (!retval) {
-							printf("MOJODDS_getCubeFace(%u, %u) error: %d\n", cubeFace, miplevel, retval);
+							printf("MOJODDS_getCubeFace(%d, %u) error: %d\n", cubeFace, miplevel, retval);
 							continue;
 						}
 
