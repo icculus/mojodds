@@ -351,9 +351,19 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         *_cubemapfacelen = 0;
         for (i = 0; i < (int)*_miplevels; i++)
         {
-            *_cubemapfacelen += ((MAX( wd, blockDim ) / blockDim) * (MAX( ht, blockDim ) / blockDim)) * blockSize;
+            uint32_t mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+            if (UINT32_MAX - mipLen < *_cubemapfacelen) {
+                // data size would overflow 32-bit uint, invalid file
+                return 0;
+            }
+            *_cubemapfacelen += mipLen;
             wd >>= 1;
             ht >>= 1;
+        }
+
+        // 6 because cube faces
+        if (*len < (*_cubemapfacelen) * 6) {
+            return 0;
         }
     }
     else if (*_textureType == MOJODDS_TEXTURE_2D)
