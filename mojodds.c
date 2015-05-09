@@ -444,7 +444,7 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
                              unsigned int *_texw, unsigned int *_texh)
 {
     int i;
-    const void* newtex;
+    const char* newtex;
     unsigned long newtexlen;
     unsigned int neww;
     unsigned int newh;
