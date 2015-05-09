@@ -270,8 +270,7 @@ int main(int argc, char *argv[]) {
 	// glewInit might raise errors if we got an OpenGL 3.0 context
 	// ignore them
 	// in this case glGetError is simpler than fooling around with callbacks
-	GLenum err = GL_NO_ERROR;
-	while ((err = glGetError()) != GL_NO_ERROR) { }
+	while (glGetError() != GL_NO_ERROR) { }
 
 	for (int i = 1; i < argc; i++) {
 		glddstest(argv[i]);
