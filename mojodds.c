@@ -104,6 +104,25 @@ typedef struct
 } MOJODDS_Header;
 
 
+//http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
+static const uint32_t MultiplyDeBruijnBitPosition[32] =
+{
+  0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+  8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+};
+
+
+static uint32_t uintLog2(uint32_t v) {
+    v |= v >> 1; // first round down to one less than a power of 2
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+
+    return MultiplyDeBruijnBitPosition[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+}
+
+
 static uint32 readui32(const uint8 **_ptr, size_t *_len)
 {
     uint32 retval = 0;
@@ -194,11 +213,17 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
 
     *_miplevels = (header->dwCaps & DDSCAPS_MIPMAP) ? header->dwMipMapCount : 1;
 
+    unsigned int calculatedMipLevels = uintLog2(MAX(width, height)) + 1;
     if (*_miplevels > 32)
     {
         // too many mip levels, width and height would be larger than 32-bit int
         // file is corrupted
         return 0;
+    }
+    else if (*_miplevels == 0)
+    {
+        // invalid, calculate it ourselves from size
+        *_miplevels = calculatedMipLevels;
     }
 
     if (header->ddspf.dwFlags & DDPF_FOURCC)
