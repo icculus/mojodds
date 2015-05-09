@@ -92,6 +92,13 @@ static int glddstest(const char *filename) {
 			return 3;
 		}
 
+		GLint maxTexSize = 0;
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+		if (w > maxTexSize || h > maxTexSize) {
+			printf("Texture too large: %ux%u vs %d\n", w, h, maxTexSize);
+			return 4;
+		}
+
 		bool isCompressed = true;
 		GLenum internalFormat = glfmt;
 		if (glfmt == GL_BGRA || glfmt == GL_BGR || glfmt == GL_LUMINANCE_ALPHA) {
