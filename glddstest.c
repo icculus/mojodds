@@ -244,34 +244,34 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-        SDL_Init(SDL_INIT_VIDEO);
-		SDL_Window *window = SDL_CreateWindow("OpenGL DDS test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
-		if (window == NULL) {
-			printf("Could not create window: %s\n", SDL_GetError());
-			return 3;
-		}
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Window *window = SDL_CreateWindow("OpenGL DDS test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
+	if (window == NULL) {
+		printf("Could not create window: %s\n", SDL_GetError());
+		return 3;
+	}
 
-		SDL_GLContext context = SDL_GL_CreateContext(window);
-		if (context == NULL) {
-			printf("Could not create GL context: %s\n", SDL_GetError());
-			SDL_DestroyWindow(window);
-			return 4;
-		}
+	SDL_GLContext context = SDL_GL_CreateContext(window);
+	if (context == NULL) {
+		printf("Could not create GL context: %s\n", SDL_GetError());
+		SDL_DestroyWindow(window);
+		return 4;
+	}
 
-		// clear and swap to get better traces
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
+	// clear and swap to get better traces
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_GL_SwapWindow(window);
 
-		glewInit();
+	glewInit();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_GL_SwapWindow(window);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_GL_SwapWindow(window);
 
-		// glewInit might raise errors if we got an OpenGL 3.0 context
-		// ignore them
-		// in this case glGetError is simpler than fooling around with callbacks
-		GLenum err = GL_NO_ERROR;
-		while ((err = glGetError()) != GL_NO_ERROR) { }
+	// glewInit might raise errors if we got an OpenGL 3.0 context
+	// ignore them
+	// in this case glGetError is simpler than fooling around with callbacks
+	GLenum err = GL_NO_ERROR;
+	while ((err = glGetError()) != GL_NO_ERROR) { }
 
 	for (int i = 1; i < argc; i++) {
 		glddstest(argv[i]);
@@ -282,8 +282,8 @@ int main(int argc, char *argv[]) {
 
 	}
 
-		SDL_GL_DeleteContext(context);
-		SDL_DestroyWindow(window);
+	SDL_GL_DeleteContext(context);
+	SDL_DestroyWindow(window);
 
 	return 0;
 }
