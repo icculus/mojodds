@@ -473,9 +473,9 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
     assert(blockSize != 0);
 
     newtex = _basetex;
-    newtexlen = _basetexlen;
     neww = w;
     newh = h;
+    newtexlen = ((neww + blockDim - 1) / blockDim) * ((newh + blockDim - 1) / blockDim) * blockSize;
 
     // Calculate size of miplevel
     for (i=0; i < miplevel; ++i)
