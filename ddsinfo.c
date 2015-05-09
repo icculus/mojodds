@@ -74,7 +74,7 @@ static int ddsinfo(const char *filename) {
 			const void *miptex = NULL;
 			unsigned long miptexlen = 0;
 			unsigned int mipW = 0, mipH = 0;
-			retval = MOJODDS_getMipMapTexture(miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+			retval = MOJODDS_getMipMapTexture(miplevel, glfmt, tex, w, h, &miptex, &miptexlen, &mipW, &mipH);
 			if (!retval) {
 				printf("MOJODDS_getMipMapTexture(%u) error: %d\n", miplevel, retval);
 				continue;
@@ -90,13 +90,14 @@ static int ddsinfo(const char *filename) {
 
 		case MOJODDS_TEXTURE_CUBE:
 			printf("cube\n");
+			printf("cubemapfacelen: %u\n", cubemapfacelen);
 			printf("\n");
 
 			for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
 				const void *miptex = NULL;
 				unsigned long miptexlen = 0;
 				unsigned int mipW = 0, mipH = 0;
-				retval = MOJODDS_getCubeFace(MOJODDS_CUBEFACE_POSITIVE_X, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+				retval = MOJODDS_getCubeFace(MOJODDS_CUBEFACE_POSITIVE_X, miplevel, glfmt, tex, cubemapfacelen, w, h, &miptex, &miptexlen, &mipW, &mipH);
 				if (!retval) {
 					printf("MOJODDS_getMipMapTexture(%u) error: %d\n", miplevel, retval);
 					continue;

@@ -35,14 +35,14 @@ int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        unsigned int *_cubemapfacelen,
                        MOJODDS_textureType *_textureType);
 int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
-                             const void*_basetex, const unsigned long _basetexlen,
+                             const void*_basetex,
                              unsigned int w, unsigned h,
                              const void **_tex, unsigned long *_texlen,
                              unsigned int *_texw, unsigned int *_texh);
 
 int MOJODDS_getCubeFace(MOJODDS_cubeFace cubeFace, unsigned int miplevel,
                         unsigned int glfmt, const void*_basetex,
-                        unsigned long _basetexlen, unsigned int w, unsigned h,
+                        unsigned long _cubemapfacelen, unsigned int w, unsigned h,
                         const void **_tex, unsigned long *_texlen,
                         unsigned int *_texw, unsigned int *_texh);
 

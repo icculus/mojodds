@@ -126,7 +126,7 @@ static int glddstest(const char *filename) {
 			const void *miptex = NULL;
 			unsigned long miptexlen = 0;
 			unsigned int mipW = 0, mipH = 0;
-			retval = MOJODDS_getMipMapTexture(miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+			retval = MOJODDS_getMipMapTexture(miplevel, glfmt, tex, w, h, &miptex, &miptexlen, &mipW, &mipH);
 			if (!retval) {
 				printf("MOJODDS_getMipMapTexture(%u) error: %d\n", miplevel, retval);
 				continue;
@@ -152,7 +152,7 @@ static int glddstest(const char *filename) {
 				const void *miptex = NULL;
 				unsigned long miptexlen = 0;
 				unsigned int mipW = 0, mipH = 0;
-				retval = MOJODDS_getMipMapTexture(miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+				retval = MOJODDS_getMipMapTexture(miplevel, glfmt, tex, w, h, &miptex, &miptexlen, &mipW, &mipH);
 				if (!retval) {
 					printf("MOJODDS_getMipMapTexture(%u) error: %d\n", miplevel, retval);
 					continue;
@@ -178,7 +178,7 @@ static int glddstest(const char *filename) {
 					const void *miptex = NULL;
 					unsigned long miptexlen = 0;
 					unsigned int mipW = 0, mipH = 0;
-					retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+					retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, cubemapfacelen, w, h, &miptex, &miptexlen, &mipW, &mipH);
 					if (!retval) {
 						printf("MOJODDS_getCubeFace(%u, %u) error: %d\n", cubeFace, miplevel, retval);
 						continue;
@@ -206,7 +206,7 @@ static int glddstest(const char *filename) {
 						const void *miptex = NULL;
 						unsigned long miptexlen = 0;
 						unsigned int mipW = 0, mipH = 0;
-						retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, texlen, w, h, &miptex, &miptexlen, &mipW, &mipH);
+						retval = MOJODDS_getCubeFace(cubeFace, miplevel, glfmt, tex, cubemapfacelen, w, h, &miptex, &miptexlen, &mipW, &mipH);
 						if (!retval) {
 							printf("MOJODDS_getCubeFace(%u, %u) error: %d\n", cubeFace, miplevel, retval);
 							continue;

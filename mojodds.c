@@ -438,7 +438,7 @@ int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
 } // MOJODDS_getTexture
 
 int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
-                             const void*_basetex, const unsigned long _basetexlen,
+                             const void*_basetex,
                              unsigned int w, unsigned h,
                              const void **_tex, unsigned long *_texlen,
                              unsigned int *_texw, unsigned int *_texh)
@@ -512,17 +512,17 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
 
 int MOJODDS_getCubeFace(MOJODDS_cubeFace cubeFace, unsigned int miplevel,
                         unsigned int glfmt, const void *_basetex,
-                        unsigned long _basetexlen, unsigned int w, unsigned h,
+                        unsigned long _cubemapfacelen, unsigned int w, unsigned h,
                         const void **_tex, unsigned long *_texlen,
                         unsigned int *_texw, unsigned int *_texh)
 {
     // pick correct face
     const char *faceBaseTex = (const char *) _basetex;
-    faceBaseTex = faceBaseTex + cubeFace * _basetexlen;
+    faceBaseTex = faceBaseTex + cubeFace * _cubemapfacelen;
 
 
     // call MOJODDS_getMipMapTexture to get offset in that face
-    return MOJODDS_getMipMapTexture(miplevel, glfmt, faceBaseTex, _basetexlen, w, h, _tex, _texlen, _texw, _texh);
+    return MOJODDS_getMipMapTexture(miplevel, glfmt, faceBaseTex, w, h, _tex, _texlen, _texw, _texh);
 }
 
 
