@@ -51,7 +51,10 @@ static void pumpGLErrors(const char *format, ...) {
 
 
 static int glddstest(const char *filename) {
-    printf("%s\n", filename);
+	printf("%s\n", filename);
+	if (GLEW_GREMEDY_string_marker) {
+		glStringMarkerGREMEDY(0, filename);
+	}
 
 	FILE *f = fopen(filename, "rb");
 	if (!f) {
