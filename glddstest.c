@@ -84,7 +84,7 @@ static int glddstest(const char *filename) {
 		unsigned long texlen = 0;
 		unsigned int glfmt = 0, w = 0, h = 0, miplevels = 0;
 		unsigned int cubemapfacelen = 0;
-		MOJODDS_textureType textureType = MOJODDS_TEXTURE_NONE;
+		MOJODDS_textureType textureType = 0;
 		int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels, &cubemapfacelen, &textureType);
 		if (!retval) {
 			printf("MOJODDS_getTexture failed\n");
@@ -115,10 +115,6 @@ static int glddstest(const char *filename) {
 		glGenTextures(1, &texId);
 
 		switch (textureType) {
-		case MOJODDS_TEXTURE_NONE:
-			assert(false);  // this is not supposed to happen
-			break;
-
 		case MOJODDS_TEXTURE_2D:
 		glBindTexture(GL_TEXTURE_2D, texId);
 

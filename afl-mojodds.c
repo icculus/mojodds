@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 	unsigned long texlen = 0;
 	unsigned int glfmt = 0, w = 0, h = 0, miplevels = 0;
 	unsigned int cubemapfacelen = 0;
-	MOJODDS_textureType textureType = MOJODDS_TEXTURE_NONE;
+	MOJODDS_textureType textureType = 0;
 	int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels, &cubemapfacelen, &textureType);
 	if (!retval) {
 		free(contents);
@@ -64,10 +64,6 @@ int main(int argc, char *argv[]) {
 
 	uint32_t hash = 0x12345678;
 	switch (textureType) {
-	case MOJODDS_TEXTURE_NONE:
-		assert(false);  // this is not supposed to happen
-		break;
-
 	case MOJODDS_TEXTURE_2D:
 	for (unsigned int miplevel = 0; miplevel < miplevels; miplevel++) {
 		const void *miptex = NULL;

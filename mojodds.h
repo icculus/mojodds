@@ -8,7 +8,6 @@ extern "C" {
 
 typedef enum MOJODDS_textureType
 {
-    MOJODDS_TEXTURE_NONE,
     MOJODDS_TEXTURE_2D,
     MOJODDS_TEXTURE_CUBE,
     MOJODDS_TEXTURE_VOLUME
