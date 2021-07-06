@@ -47,7 +47,9 @@ int main(int argc, char *argv[]) {
 		const void *tex = NULL;
 		unsigned long texlen = 0;
 		unsigned int glfmt = 0, w = 0, h = 0, miplevels = 0;
-		int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels);
+		unsigned int cubemapfacelen = 0;
+		MOJODDS_textureType textureType = MOJODDS_TEXTURE_NONE;
+		int retval = MOJODDS_getTexture(contents, size, &tex, &texlen, &glfmt, &w, &h, &miplevels, &cubemapfacelen, &textureType);
 
 		uintptr_t texoffset = ((const char *)(tex)) - contents;
 		printf("MOJODDS_getTexture retval: %d\n", retval);

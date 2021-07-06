@@ -22,6 +22,8 @@ typedef uint8_t uint8;
 typedef uint32_t uint32;
 #endif
 
+#include "mojodds.h"
+
 #define STATICARRAYLEN(x) ( (sizeof ((x))) / (sizeof ((x)[0])) )
 
 #define DDS_MAGIC 0x20534444  // 'DDS ' in littleendian.
@@ -40,6 +42,14 @@ typedef uint32_t uint32;
 #define DDSCAPS_COMPLEX 0x8
 #define DDSCAPS_MIPMAP 0x400000
 #define DDSCAPS_TEXTURE 0x1000
+#define DDSCAPS2_CUBEMAP 0x200
+#define DDSCAPS2_CUBEMAP_POSITIVEX 0x400
+#define DDSCAPS2_CUBEMAP_NEGATIVEX 0x800
+#define DDSCAPS2_CUBEMAP_POSITIVEY 0x1000
+#define DDSCAPS2_CUBEMAP_NEGATIVEY 0x2000
+#define DDSCAPS2_CUBEMAP_POSITIVEZ 0x4000
+#define DDSCAPS2_CUBEMAP_NEGATIVEZ 0x8000
+#define DDSCAPS2_VOLUME 0x200000
 #define DDPF_ALPHAPIXELS 0x1
 #define DDPF_ALPHA 0x2
 #define DDPF_FOURCC 0x4
@@ -60,6 +70,8 @@ typedef uint32_t uint32;
 #define GL_BGR 0x80E0
 #define GL_BGRA 0x80E1
 #define GL_LUMINANCE_ALPHA 0x190A
+
+#define MAX( a, b ) ((a) > (b) ? (a) : (b))
 
 typedef struct
 {
@@ -109,13 +121,17 @@ static uint32 readui32(const uint8 **_ptr, size_t *_len)
 } // readui32
 
 static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
-                     unsigned int *_glfmt, unsigned int *_miplevels)
+                     unsigned int *_glfmt, unsigned int *_miplevels,
+                     unsigned int *_cubemapfacelen,
+                     MOJODDS_textureType *_textureType)
 {
     const uint32 pitchAndLinear = (DDSD_PITCH | DDSD_LINEARSIZE);
     uint32 width = 0;
     uint32 height = 0;
     uint32 calcSize = 0;
     uint32 calcSizeFlag = DDSD_LINEARSIZE;
+    uint32 blockDim = 1;
+    uint32 blockSize = 0;
     int i;
 
     // Files start with magic value...
@@ -162,8 +178,6 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         return 0;
     else if ((header->dwCaps & DDSCAPS_TEXTURE) == 0)
         return 0;
-    else if (header->dwCaps2 != 0)  // !!! FIXME (non-zero with other bits in dwCaps set)
-        return 0;
     else if ((header->dwFlags & pitchAndLinear) == pitchAndLinear)
         return 0;  // can't specify both.
 
@@ -177,16 +191,22 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
                 calcSize = ((width ? ((width + 3) / 4) : 1) * 8) *
                            (height ? ((height + 3) / 4) : 1);
+                blockDim = 4;
+                blockSize = 8;
                 break;
             case FOURCC_DXT3:
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
                 calcSize = ((width ? ((width + 3) / 4) : 1) * 16) *
                            (height ? ((height + 3) / 4) : 1);
+                blockDim = 4;
+                blockSize = 16;
                 break;
             case FOURCC_DXT5:
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
                 calcSize = ((width ? ((width + 3) / 4) : 1) * 16) *
                            (height ? ((height + 3) / 4) : 1);
+                blockDim = 4;
+                blockSize = 16;
                 break;
 
             // !!! FIXME: DX10 is an extended header, introduced by DirectX 10.
@@ -213,12 +233,14 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
                  (header->ddspf.dwABitMask != 0xFF000000) )
                 return 0;  // unsupported.
             *_glfmt = GL_BGRA;
+            blockSize = 4;
         } // if
         else
         {
             if (header->ddspf.dwRGBBitCount != 24)
                 return 0;  // unsupported.
             *_glfmt = GL_BGR;
+            blockSize = 3;
         } // else
 
         calcSizeFlag = DDSD_PITCH;
@@ -253,6 +275,39 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         header->dwFlags |= calcSizeFlag;
     } // if
 
+    *_textureType = MOJODDS_TEXTURE_2D;
+    { // figure out texture type.
+        if (header->dwCaps & DDSCAPS_COMPLEX &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEX &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEX &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEY &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEY &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEZ &&
+            header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEZ)
+        {
+            *_textureType = MOJODDS_TEXTURE_CUBE;
+        }
+        else if (header->dwCaps2 & DDSCAPS2_VOLUME)
+        {
+            *_textureType = MOJODDS_TEXTURE_VOLUME;
+        }
+    }
+
+    // figure out how much memory makes up a single face mip chain.
+    if (*_textureType == MOJODDS_TEXTURE_CUBE)
+    {
+        uint32 wd = header->dwWidth;
+        uint32 ht = header->dwHeight;
+        *_cubemapfacelen = 0;
+        for (i = 0; i < (int)*_miplevels; i++)
+        {
+            *_cubemapfacelen += ((MAX( wd, blockDim ) / blockDim) * (MAX( ht, blockDim ) / blockDim)) * blockSize;
+            wd >>= 1;
+            ht >>= 1;
+        }
+    }
+
     return 1;
 } // parse_dds
 
@@ -268,12 +323,14 @@ int MOJODDS_isDDS(const void *_ptr, const unsigned long _len)
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        const void **_tex, unsigned long *_texlen,
                        unsigned int *_glfmt, unsigned int *_w,
-                       unsigned int *_h, unsigned int *_miplevels)
+                       unsigned int *_h, unsigned int *_miplevels,
+                       unsigned int *_cubemapfacelen,
+                       MOJODDS_textureType *_textureType)
 {
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     MOJODDS_Header header;
-    if (!parse_dds(&header, &ptr, &len, _glfmt, _miplevels))
+    if (!parse_dds(&header, &ptr, &len, _glfmt, _miplevels, _cubemapfacelen, _textureType))
         return 0;
 
     *_tex = (const void *) ptr;
