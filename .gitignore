@@ -1,0 +1,6 @@
+*.o
+*~
+*.trace
+ddsinfo
+glddstest
+afl-mojodds
