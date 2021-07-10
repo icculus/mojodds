@@ -2,8 +2,6 @@
  * MojoDDS; tools for dealing with DDS files.
  *
  * Please see the file LICENSE.txt in the source's root directory.
- *
- *  This file written by Ryan C. Gordon.
  */
 
 // Specs on DDS format: http://msdn.microsoft.com/en-us/library/bb943991.aspx/

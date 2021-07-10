@@ -1,3 +1,9 @@
+/**
+ * MojoDDS; tools for dealing with DDS files.
+ *
+ * Please see the file LICENSE.txt in the source's root directory.
+ */
+
 #ifndef _INCL_MOJODDS_H_
 #define _INCL_MOJODDS_H_
 

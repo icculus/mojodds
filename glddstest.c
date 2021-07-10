@@ -1,3 +1,9 @@
+/**
+ * MojoDDS; tools for dealing with DDS files.
+ *
+ * Please see the file LICENSE.txt in the source's root directory.
+ */
+
 #define _GNU_SOURCE
 
 #include <assert.h>
