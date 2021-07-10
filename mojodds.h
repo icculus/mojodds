@@ -16,7 +16,8 @@ typedef enum MOJODDS_textureType
 
 /* order and values for these matter, they are used for calculating offsets
    lucky for us both DDS and OpengGL order matches */
-typedef enum MOJODDS_cubeFace {
+typedef enum MOJODDS_cubeFace
+{
     MOJODDS_CUBEFACE_POSITIVE_X,
     MOJODDS_CUBEFACE_NEGATIVE_X,
     MOJODDS_CUBEFACE_POSITIVE_Y,
@@ -34,7 +35,7 @@ int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        unsigned int *_cubemapfacelen,
                        MOJODDS_textureType *_textureType);
 int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
-                             const void*_basetex,
+                             const void *_basetex,
                              unsigned int w, unsigned h,
                              const void **_tex, unsigned long *_texlen,
                              unsigned int *_texw, unsigned int *_texh);
@@ -44,7 +45,6 @@ int MOJODDS_getCubeFace(MOJODDS_cubeFace cubeFace, unsigned int miplevel,
                         unsigned long _cubemapfacelen, unsigned int w, unsigned h,
                         const void **_tex, unsigned long *_texlen,
                         unsigned int *_texw, unsigned int *_texh);
-
 
 #ifdef __cplusplus
 }

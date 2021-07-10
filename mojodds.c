@@ -108,7 +108,7 @@ typedef struct
 } MOJODDS_Header;
 
 
-//http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
+// https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
 static const uint32 MultiplyDeBruijnBitPosition[32] =
 {
     0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
@@ -116,7 +116,8 @@ static const uint32 MultiplyDeBruijnBitPosition[32] =
 };
 
 
-static uint32 uintLog2(uint32 v) {
+static uint32 uintLog2(uint32 v)
+{
     v |= v >> 1; // first round down to one less than a power of 2
     v |= v >> 2;
     v |= v >> 4;
@@ -130,18 +131,17 @@ static uint32 uintLog2(uint32 v) {
 static uint32 readui32(const uint8 **_ptr, size_t *_len)
 {
     uint32 retval = 0;
-    if (*_len < sizeof (retval))
+    if (*_len < sizeof (retval)) {
         *_len = 0;
-    else
-    {
+    } else {
         const uint8 *ptr = *_ptr;
         retval = (((uint32) ptr[0]) <<  0) | (((uint32) ptr[1]) <<  8) |
                  (((uint32) ptr[2]) << 16) | (((uint32) ptr[3]) << 24) ;
         *_ptr += sizeof (retval);
         *_len -= sizeof (retval);
-    } // else
+    }
     return retval;
-} // readui32
+}
 
 static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
                      unsigned int *_glfmt, unsigned int *_miplevels,
@@ -157,13 +157,11 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     uint32 blockSize = 0;
     int i;
 
-    // Files start with magic value...
-    if (readui32(ptr, len) != DDS_MAGIC)
+    if (readui32(ptr, len) != DDS_MAGIC) {  // Files start with magic value...
         return 0;  // not a DDS file.
-
-    // Then comes the DDS header...
-    if (*len < DDS_HEADERSIZE)
+    } else if (*len < DDS_HEADERSIZE) {  // Then comes the DDS header...
         return 0;
+    }
 
     header->dwSize = readui32(ptr, len);
     header->dwFlags = readui32(ptr, len);
@@ -172,8 +170,9 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     header->dwPitchOrLinearSize = readui32(ptr, len);
     header->dwDepth = readui32(ptr, len);
     header->dwMipMapCount = readui32(ptr, len);
-    for (i = 0; i < STATICARRAYLEN(header->dwReserved1); i++)
+    for (i = 0; i < STATICARRAYLEN(header->dwReserved1); i++) {
         header->dwReserved1[i] = readui32(ptr, len);
+    }
     header->ddspf.dwSize = readui32(ptr, len);
     header->ddspf.dwFlags = readui32(ptr, len);
     header->ddspf.dwFourCC = readui32(ptr, len);
@@ -191,49 +190,40 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     width = header->dwWidth;
     height = header->dwHeight;
 
-    if (width == 0 || height == 0)
-    {
+    if (width == 0 || height == 0) {
         return 0;
     }
 
     // check for overflow in width * height
-    if (height > 0xFFFFFFFFU / width)
-    {
+    if (height > 0xFFFFFFFFU / width) {
         return 0;
     }
 
     header->dwCaps &= ~DDSCAPS_ALPHA;  // we'll get this from the pixel format.
 
-    if (header->dwSize != DDS_HEADERSIZE)   // header size must be 124.
+    if (header->dwSize != DDS_HEADERSIZE) {   // header size must be 124.
         return 0;
-    else if (header->ddspf.dwSize != DDS_PIXFMTSIZE)   // size must be 32.
+    } else if (header->ddspf.dwSize != DDS_PIXFMTSIZE) {   // size must be 32.
         return 0;
-    else if ((header->dwFlags & DDSD_REQ) != DDSD_REQ)  // must have these bits.
+    } else if ((header->dwFlags & DDSD_REQ) != DDSD_REQ) {  // must have these bits.
         return 0;
-    else if ((header->dwCaps & DDSCAPS_TEXTURE) == 0)
+    } else if ((header->dwCaps & DDSCAPS_TEXTURE) == 0) {
         return 0;
-    else if ((header->dwFlags & pitchAndLinear) == pitchAndLinear)
+    } else if ((header->dwFlags & pitchAndLinear) == pitchAndLinear) {
         return 0;  // can't specify both.
+    }
 
     *_miplevels = (header->dwCaps & DDSCAPS_MIPMAP) ? header->dwMipMapCount : 1;
 
     unsigned int calculatedMipLevels = uintLog2(MAX(width, height)) + 1;
-    if (*_miplevels == 0)
-    {
-        // invalid, calculate it ourselves from size
+    if (*_miplevels == 0) {  // invalid, calculate it ourselves from size
         *_miplevels = calculatedMipLevels;
-    }
-    else if (*_miplevels > calculatedMipLevels)
-    {
-        // too many mip levels, several would be 1x1
-        // file is corrupted
-        return 0;
+    } else if (*_miplevels > calculatedMipLevels) {  // too many mip levels, several would be 1x1
+        return 0;  // file is corrupted
     }
 
-    if (header->ddspf.dwFlags & DDPF_FOURCC)
-    {
-        switch (header->ddspf.dwFourCC)
-        {
+    if (header->ddspf.dwFlags & DDPF_FOURCC) {
+        switch (header->ddspf.dwFourCC) {
             case FOURCC_DXT1:
                 *_glfmt = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
                 calcSize = ((width ? ((width + 3) / 4) : 1) * 8) *
@@ -263,40 +253,35 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
             //case FOURCC_DXT4:  // premultiplied alpha unsupported.
             default:
                 return 0;  // unsupported data format.
-        } // switch
-    } // if
+        }
 
-    // no FourCC...uncompressed data.
-    else if (header->ddspf.dwFlags & DDPF_RGB)
-    {
+    } else if (header->ddspf.dwFlags & DDPF_RGB) {  // no FourCC...uncompressed data.
         if ( (header->ddspf.dwRBitMask != 0x00FF0000) ||
              (header->ddspf.dwGBitMask != 0x0000FF00) ||
-             (header->ddspf.dwBBitMask != 0x000000FF) )
+             (header->ddspf.dwBBitMask != 0x000000FF) ) {
             return 0;  // !!! FIXME: deal with this.
+        }
 
-        if (header->ddspf.dwFlags & DDPF_ALPHAPIXELS)
-        {
+        if (header->ddspf.dwFlags & DDPF_ALPHAPIXELS) {
             if ( (header->ddspf.dwRGBBitCount != 32) ||
-                 (header->ddspf.dwABitMask != 0xFF000000) )
+                 (header->ddspf.dwABitMask != 0xFF000000) ) {
                 return 0;  // unsupported.
+            }
             *_glfmt = GL_BGRA;
             blockSize = 4;
-        } // if
-        else
-        {
-            if (header->ddspf.dwRGBBitCount != 24)
+        } else {
+            if (header->ddspf.dwRGBBitCount != 24) {
                 return 0;  // unsupported.
+            }
             *_glfmt = GL_BGR;
             blockSize = 3;
-        } // else
+        }
 
         calcSizeFlag = DDSD_PITCH;
         calcSize = ((width * header->ddspf.dwRGBBitCount) + 7) / 8;
-    }
-    else if (header->ddspf.dwFlags & (DDPF_LUMINANCE | DDPF_ALPHA) )
-    {
-        *_glfmt = GL_LUMINANCE_ALPHA;
 
+    } else if (header->ddspf.dwFlags & (DDPF_LUMINANCE | DDPF_ALPHA) ) {
+        *_glfmt = GL_LUMINANCE_ALPHA;
         calcSizeFlag = DDSD_PITCH;
         blockSize = 2;
         calcSize = ((width * header->ddspf.dwRGBBitCount) + 7) / 8;
@@ -305,57 +290,49 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     //else if (header->ddspf.dwFlags & DDPF_LUMINANCE)  // !!! FIXME
     //else if (header->ddspf.dwFlags & DDPF_YUV)  // !!! FIXME
     //else if (header->ddspf.dwFlags & DDPF_ALPHA)  // !!! FIXME
-    else
-    {
+
+    else {
         return 0;  // unsupported data format.
-    } // else if
+    }
 
     // no pitch or linear size? Calculate it.
-    if ((header->dwFlags & pitchAndLinear) == 0)
-    {
-        if (!calcSizeFlag)
-        {
+    if ((header->dwFlags & pitchAndLinear) == 0) {
+        if (!calcSizeFlag) {
             assert(0 && "should have caught this up above");
             return 0;  // uh oh.
-        } // if
+        }
 
         header->dwPitchOrLinearSize = calcSize;
         header->dwFlags |= calcSizeFlag;
-    } // if
+    }
 
     *_textureType = MOJODDS_TEXTURE_2D;
-    { // figure out texture type.
-        if (header->dwCaps & DDSCAPS_COMPLEX &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEX &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEX &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEY &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEY &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEZ &&
-            header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEZ)
-        {
-            *_textureType = MOJODDS_TEXTURE_CUBE;
-        }
-        else if (header->dwCaps2 & DDSCAPS2_VOLUME)
-        {
-            *_textureType = MOJODDS_TEXTURE_VOLUME;
-        }
+    // figure out texture type.
+    if ( (header->dwCaps & DDSCAPS_COMPLEX) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEX) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEX) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEY) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEY) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP_POSITIVEZ) &&
+         (header->dwCaps2 & DDSCAPS2_CUBEMAP_NEGATIVEZ) ) {
+        *_textureType = MOJODDS_TEXTURE_CUBE;
+    } else if (header->dwCaps2 & DDSCAPS2_VOLUME) {
+        *_textureType = MOJODDS_TEXTURE_VOLUME;
     }
 
     // figure out how much memory makes up a single face mip chain.
-    if (*_textureType == MOJODDS_TEXTURE_CUBE)
-    {
+    if (*_textureType == MOJODDS_TEXTURE_CUBE) {
         uint32 wd = header->dwWidth;
         uint32 ht = header->dwHeight;
-        if (wd != ht)
-        {
-            // cube maps must be square
-            return 0;
+        if (wd != ht) {
+            return 0;  // cube maps must be square
         }
+
         *_cubemapfacelen = 0;
-        for (i = 0; i < (int)*_miplevels; i++)
-        {
-            uint32 mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+
+        for (i = 0; i < (int)*_miplevels; i++) {
+            const uint32 mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
             if (UINT32_MAX - mipLen < *_cubemapfacelen) {
                 // data size would overflow 32-bit uint, invalid file
                 return 0;
@@ -365,21 +342,18 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
             ht >>= 1;
         }
 
-        // 6 because cube faces
-        if (*len < (*_cubemapfacelen) * 6) {
+        if (*len < (*_cubemapfacelen) * 6) {  // 6 because cube faces
             return 0;
         }
-    }
-    else if (*_textureType == MOJODDS_TEXTURE_2D)
-    {
+
+    } else if (*_textureType == MOJODDS_TEXTURE_2D) {
         // check that file contains enough data like the header says
         // TODO: also do this for other texture types
         uint32 wd = header->dwWidth;
         uint32 ht = header->dwHeight;
         uint32 dataLen = 0;
-        for (i = 0; i < (int)*_miplevels; i++)
-        {
-            uint32 mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+        for (i = 0; i < (int)*_miplevels; i++) {
+            const uint32 mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
             if (UINT32_MAX - mipLen < dataLen) {
                 // data size would overflow 32-bit uint, invalid file
                 return 0;
@@ -395,18 +369,15 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
     }
 
     if (header->dwPitchOrLinearSize > *len) {
-        // dwPitchOrLinearSize is incorrect
-        return 0;
+        return 0;   // dwPitchOrLinearSize is incorrect
     }
 
-    if (calcSize > *len) {
-        // there's not enough data to contain the advertised images
-        // trying to read mips would fail
-        return 0;
+    if (calcSize > *len) { // there's not enough data to contain the advertised images
+        return 0;  // trying to read mips would fail
     }
 
     return 1;
-} // parse_dds
+}
 
 
 // !!! FIXME: improve the crap out of this API later.
@@ -415,7 +386,7 @@ int MOJODDS_isDDS(const void *_ptr, const unsigned long _len)
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     return (readui32(&ptr, &len) == DDS_MAGIC);
-} // MOJODDS_isDDS
+}
 
 int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
                        const void **_tex, unsigned long *_texlen,
@@ -427,22 +398,24 @@ int MOJODDS_getTexture(const void *_ptr, const unsigned long _len,
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     MOJODDS_Header header;
-    if (!parse_dds(&header, &ptr, &len, _glfmt, _miplevels, _cubemapfacelen, _textureType))
+    if (!parse_dds(&header, &ptr, &len, _glfmt, _miplevels, _cubemapfacelen, _textureType)) {
         return 0;
+    }
 
     *_tex = (const void *) ptr;
     *_w = (unsigned int) header.dwWidth;
     *_h = (unsigned int) header.dwHeight;
     *_texlen = (unsigned long) header.dwPitchOrLinearSize;
 
-    if (header.dwFlags & DDSD_PITCH)
+    if (header.dwFlags & DDSD_PITCH) {
         *_texlen *= header.dwHeight;
+    }
 
     return 1;
-} // MOJODDS_getTexture
+}
 
 int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
-                             const void*_basetex,
+                             const void *_basetex,
                              unsigned int w, unsigned h,
                              const void **_tex, unsigned long *_texlen,
                              unsigned int *_texw, unsigned int *_texh)
@@ -456,32 +429,32 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
     uint32 blockSize = 0;
 
     switch (glfmt) {
-    case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-        blockDim = 4;
-        blockSize = 8;
-        break;
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+            blockDim = 4;
+            blockSize = 8;
+            break;
 
-    case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-    case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-        blockDim = 4;
-        blockSize = 16;
-        break;
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            blockDim = 4;
+            blockSize = 16;
+            break;
 
-    case GL_BGR:
-        blockSize = 3;
-        break;
+        case GL_BGR:
+            blockSize = 3;
+            break;
 
-    case GL_BGRA:
-        blockSize = 4;
-        break;
+        case GL_BGRA:
+            blockSize = 4;
+            break;
 
-    case GL_LUMINANCE_ALPHA:
-        blockSize = 2;
-        break;
+        case GL_LUMINANCE_ALPHA:
+            blockSize = 2;
+            break;
 
-    default:
-        assert(!"unsupported GL format");
-        break;
+        default:
+            //assert(!"unsupported GL format");
+            return 0;
     }
 
     assert(blockSize != 0);
@@ -492,8 +465,7 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
     newtexlen = ((neww + blockDim - 1) / blockDim) * ((newh + blockDim - 1) / blockDim) * blockSize;
 
     // Calculate size of miplevel
-    for (i = 0; i < miplevel; ++i)
-    {
+    for (i = 0; i < miplevel; i++) {
         // move position to next texture start
         newtex += newtexlen;
         // calculate texture size
@@ -502,7 +474,7 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
         if (neww < 1) neww = 1;
         if (newh < 1) newh = 1;
         newtexlen = ((neww + blockDim - 1) / blockDim) * ((newh + blockDim - 1) / blockDim) * blockSize;
-    } // for
+    }
 
     *_tex = newtex;
     if (_texlen) {
@@ -510,8 +482,9 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
     }
     *_texw = neww;
     *_texh = newh;
+
     return 1;
-} // MOJODDS_getMipMapTexture
+}
 
 
 int MOJODDS_getCubeFace(MOJODDS_cubeFace cubeFace, unsigned int miplevel,
@@ -521,14 +494,11 @@ int MOJODDS_getCubeFace(MOJODDS_cubeFace cubeFace, unsigned int miplevel,
                         unsigned int *_texw, unsigned int *_texh)
 {
     // pick correct face
-    const char *faceBaseTex = (const char *) _basetex;
-    faceBaseTex = faceBaseTex + cubeFace * _cubemapfacelen;
-
+    const char *faceBaseTex = ((const char *) _basetex) + cubeFace * _cubemapfacelen;
 
     // call MOJODDS_getMipMapTexture to get offset in that face
     return MOJODDS_getMipMapTexture(miplevel, glfmt, faceBaseTex, w, h, _tex, _texlen, _texw, _texh);
 }
-
 
 // end of mojodds.c ...
 
