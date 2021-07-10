@@ -10,3 +10,7 @@ those additions are not currently supported.
 
 If this is useful, feel free to plug it into your game.
 
+There is a Makefile and CMakeLists.txt, but for use in your own project,
+please just add mojodds.c and mojodds.h to your app's existing project instead.
+It's easier.
+
