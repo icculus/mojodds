@@ -22,6 +22,10 @@ typedef uint8_t uint8;
 typedef uint32_t uint32;
 #endif
 
+#ifndef UINT32_MAX
+#define UINT32_MAX 0xFFFFFFFF
+#endif
+
 #include "mojodds.h"
 
 #define STATICARRAYLEN(x) ( (sizeof ((x))) / (sizeof ((x)[0])) )
@@ -105,21 +109,21 @@ typedef struct
 
 
 //http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
-static const uint32_t MultiplyDeBruijnBitPosition[32] =
+static const uint32 MultiplyDeBruijnBitPosition[32] =
 {
-  0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
-  8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+    0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+    8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
 };
 
 
-static uint32_t uintLog2(uint32_t v) {
+static uint32 uintLog2(uint32 v) {
     v |= v >> 1; // first round down to one less than a power of 2
     v |= v >> 2;
     v |= v >> 4;
     v |= v >> 8;
     v |= v >> 16;
 
-    return MultiplyDeBruijnBitPosition[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+    return MultiplyDeBruijnBitPosition[(uint32)(v * 0x07C4ACDDU) >> 27];
 }
 
 
@@ -351,7 +355,7 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         *_cubemapfacelen = 0;
         for (i = 0; i < (int)*_miplevels; i++)
         {
-            uint32_t mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+            uint32 mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
             if (UINT32_MAX - mipLen < *_cubemapfacelen) {
                 // data size would overflow 32-bit uint, invalid file
                 return 0;
@@ -372,10 +376,10 @@ static int parse_dds(MOJODDS_Header *header, const uint8 **ptr, size_t *len,
         // TODO: also do this for other texture types
         uint32 wd = header->dwWidth;
         uint32 ht = header->dwHeight;
-        uint32_t dataLen = 0;
+        uint32 dataLen = 0;
         for (i = 0; i < (int)*_miplevels; i++)
         {
-            uint32_t mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
+            uint32 mipLen = MAX((wd + blockDim - 1) / blockDim, 1) * MAX((ht + blockDim - 1) / blockDim, 1) * blockSize;
             if (UINT32_MAX - mipLen < dataLen) {
                 // data size would overflow 32-bit uint, invalid file
                 return 0;
@@ -443,7 +447,7 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
                              const void **_tex, unsigned long *_texlen,
                              unsigned int *_texw, unsigned int *_texh)
 {
-    int i;
+    unsigned int i;
     const char* newtex;
     unsigned long newtexlen;
     unsigned int neww;
@@ -488,7 +492,7 @@ int MOJODDS_getMipMapTexture(unsigned int miplevel, unsigned int glfmt,
     newtexlen = ((neww + blockDim - 1) / blockDim) * ((newh + blockDim - 1) / blockDim) * blockSize;
 
     // Calculate size of miplevel
-    for (i=0; i < miplevel; ++i)
+    for (i = 0; i < miplevel; ++i)
     {
         // move position to next texture start
         newtex += newtexlen;
